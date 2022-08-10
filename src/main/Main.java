@@ -20,7 +20,7 @@ public class Main {
         String[] header = {"id", "Nama", "Age",	"Balanced",	"No 2b Thread-No",	"No 3 Thread-No", "Previous Balanced",
                 "Average Balanced",	"No 1 Thread-No", "Free Transfer", "No 2a Thread-No"
         };
-        AtomicInteger budget = new AtomicInteger(1000);
+        Integer budget = 1000;
         List<ModelAfter> modelList = new ArrayList<>();
         List<String[]> datas = new ArrayList<>();
         datas.add(header);
@@ -44,7 +44,7 @@ public class Main {
                 idx++;
             }
 
-            modelList.parallelStream().forEach((modelAfter) -> {
+            for(ModelAfter modelAfter : modelList){
                 System.out.println("id : " + modelAfter.getId() + ", name : " + modelAfter.getNama());
                 //avg
                 RunnableAvg Rav1 = new RunnableAvg( "1", modelAfter);
@@ -75,18 +75,9 @@ public class Main {
 
                     RunnableFreeTrf Rft3 = new RunnableFreeTrf( "6", 25, modelAfter);
                     Rft3.start();
-                }else {
-                    RunnableFreeTrf Rft1 = new RunnableFreeTrf("4", 0, modelAfter);
-                    Rft1.start();
-
-                    RunnableFreeTrf Rft2 = new RunnableFreeTrf("5", 0, modelAfter);
-                    Rft2.start();
-
-                    RunnableFreeTrf Rft3 = new RunnableFreeTrf("6", 0, modelAfter);
-                    Rft3.start();
                 }
 
-                if(budget.get() >= 10){
+                if(budget >= 10){
 
                     RunnableBonusBal Rbb1 = new RunnableBonusBal("7", 10, modelAfter);
                     Rbb1.start();
@@ -112,22 +103,22 @@ public class Main {
                     RunnableBonusBal Rbb8 = new RunnableBonusBal("14", 10, modelAfter);
                     Rbb8.start();
 
-                    budget.addAndGet(-10);
+                    budget -= 10;
                 }
 
                 datas.add(new String[]{String.valueOf(modelAfter.getId()),
                         modelAfter.getNama(),
                         String.valueOf(modelAfter.getAge()),
                         String.valueOf(modelAfter.getBalanced()),
-                        modelAfter.getNo2bThreadNo() == null ? "x" : modelAfter.getNo2bThreadNo(),
-                        modelAfter.getNo3ThreadNo() == null ? "x" : modelAfter.getNo3ThreadNo(),
+                        modelAfter.getNo2bThreadNo() == null ? " " : modelAfter.getNo2bThreadNo(),
+                        modelAfter.getNo3ThreadNo() == null ? " " : modelAfter.getNo3ThreadNo(),
                         String.valueOf(modelAfter.getPreviousBalanced()),
                         String.valueOf(modelAfter.getAverageBalanced()),
-                        modelAfter.getNo1ThreadNo() == null ? "x" : modelAfter.getNo1ThreadNo(),
+                        modelAfter.getNo1ThreadNo() == null ? " " : modelAfter.getNo1ThreadNo(),
                         String.valueOf(modelAfter.getFreeTransfer()),
-                        modelAfter.getNo2aThreadNo()  == null ? "x" : modelAfter.getNo2aThreadNo()
+                        modelAfter.getNo2aThreadNo()  == null ? " " : modelAfter.getNo2aThreadNo()
                 });
-            });
+            }
 
             Util writer = new Util();
             writer.writeToCsvFile(datas, new File("After Eod.csv"));
@@ -145,15 +136,15 @@ public class Main {
 
         RunnableAvg( String name, ModelAfter mod) {
             threadName = name;
-            this.modelAfter = mod;
+            modelAfter = mod;
             System.out.println("Creating " +  threadName );
         }
 
         public void run() {
             System.out.println("Running " +  threadName );
             try {
-                OptionalDouble newAvgBal = IntStream.of(modelAfter.getBalanced()+modelAfter.getPreviousBalanced()).average();
-                modelAfter.setAverageBalanced((int) newAvgBal.orElse(0D));
+                Integer newAvgBal = (modelAfter.getBalanced()+modelAfter.getPreviousBalanced()) / 2;
+                modelAfter.setAverageBalanced(newAvgBal);
                 modelAfter.setNo1ThreadNo(threadName);
             } catch (Exception e) {
                 System.out.println("Thread " +  threadName + " error.");
@@ -180,7 +171,7 @@ public class Main {
         RunnableFreeTrf( String name, Integer count, ModelAfter mod) {
             threadName = name;
             i = count;
-            this.modelAfter = mod;
+            modelAfter = mod;
             System.out.println("Creating " +  threadName );
         }
 
